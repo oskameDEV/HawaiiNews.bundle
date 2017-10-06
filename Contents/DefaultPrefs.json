@@ -1,0 +1,15 @@
+[
+	{
+		"id": "user_local",
+		"type": "enum",
+		"label": "Set Weather And Alerts Location",
+		"values": ["Aiea", "Honolulu", "Big Island"],
+		"default": "Honolulu"
+	},
+	{
+		"id": "force_HD",
+		"type": "bool",
+		"label": "Force Streams To Always Be High Definition",
+		"default": "false"
+	}
+]
