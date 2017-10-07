@@ -27,7 +27,8 @@ def Start():
 	DirectoryObject.art 	= R(ART)
 	VideoClipObject.art 	= R(ART)
 
-	HTTP.CacheTime = 0
+	HTTP.CacheTime = 1
+
 	HTTP.ClearCache()
 	Dict.Reset()
 	load_JSON()
@@ -37,7 +38,7 @@ def Start():
 @handler(PREFIX, NAME, ICON)
 def MainMenu():
 
-	oc 	= ObjectContainer(no_cache=True)
+	oc = ObjectContainer(no_cache=True)
 
 	# USER PREFS
 	user_local 	= Prefs['user_local']
@@ -74,10 +75,11 @@ def MainMenu():
 		title='UPDATE CHANNELS', thumb=R('icon-REFRESH.png'), summary=''
 		))
 
-	oc.add(PrefsObject(title='• Settings'))
+	oc.add(PrefsObject(title='Settings'))
 	return oc
 
 ####################################################################################
+
 @route(PREFIX + '/stream')
 def CreateVideoClipObject(url, title, thumb, art, summary,
 						  c_audio_codec = None, c_video_codec = None,
@@ -108,33 +110,33 @@ def CreateVideoClipObject(url, title, thumb, art, summary,
 	)
 
 	if include_container:
-		return ObjectContainer(objects = [vco])
+		return ObjectContainer(objects = [vco], no_cache=True)
 	else:
 		return vco
 
 ####################################################################################
 
-@route(PREFIX+'/load_list')
+@route(PREFIX+'/load_data')
 def load_JSON():
-	IP 		= HTTP.Request('https://plex.tv/pms/:/ip').content
-	PING 	= HTML.ElementFromURL('http://projects.kitsune.work/aTV/HNC/ping.php?IP='+str(IP))
+	HTTP.ClearCache()
+
+	ID 		= HTTP.Request('https://plex.tv/pms/:/ip').content
+	RNG 	= HTTP.Request('http://projects.kitsune.work/aTV/NHK/ping.php?IP='+str(ID)).content
 
 	# LOAD CHANNELS JSON
 	# IF HD?
 	try:
-		dataChannels = JSON.ObjectFromString(HTTP.Request(CHANNELS, cacheTime = 0).content)
+		dataChannels = JSON.ObjectFromString(HTTP.Request(CHANNELS+'?v='+RNG, cacheTime = 1).content)
 	except Exception:
 		Log("HNC :: Unable to load [channels] JSON.")
-		#return ObjectContainer()
 	else:
 		Dict['channels'] = dataChannels
 
 	# LOAD ALERTS JSON
 	try:
-		dataAlerts = JSON.ObjectFromString(HTTP.Request(ALERTS, cacheTime = 0).content)
+		dataAlerts = JSON.ObjectFromString(HTTP.Request(ALERTS+'?v='+RNG, cacheTime = 1).content)
 	except Exception:
 		Log("HNC :: Unable to load [alerts] JSON.")
-		#return ObjectContainer()
 	else:
 		Dict['alerts'] = dataAlerts
 	return MainMenu()
