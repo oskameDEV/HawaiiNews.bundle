@@ -1,9 +1,9 @@
 #
-#
-# HAWAII NEWS CHANNELS FOR PLEX
-# VERSION 1.0 | 09/06/2017
-# BY OSCAR KAMEOKA FOR THE PEOPLE OF HAWAII ~ WWW.KITSUNE.WORK | PROJECTS.KITSUNE.WORK/ATV/
-#
+	#
+		# HAWAII NEWS CHANNELS FOR PLEX
+		# VERSION 1.0 | 09/06/2017
+		# BY OSCAR KAMEOKA FOR THE PEOPLE OF HAWAII ~ WWW.KITSUNE.WORK ~ PROJECTS.KITSUNE.WORK/ATV/
+	#
 #
 
 import requests
@@ -19,18 +19,16 @@ ART    			= 'art-default.jpg'
 
 
 def Start():
-	# SET VIEW
-	#
-
 	ObjectContainer.title1 	= NAME
 	ObjectContainer.art 	= R(ART)
 	DirectoryObject.art 	= R(ART)
 	VideoClipObject.art 	= R(ART)
 
 	HTTP.CacheTime = 1
-
 	HTTP.ClearCache()
+
 	Dict.Reset()
+
 	load_JSON()
 
 ####################################################################################
