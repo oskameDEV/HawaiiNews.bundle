@@ -1,7 +1,7 @@
 #
 	#
 		# HAWAII NEWS CHANNELS FOR PLEX
-		# VERSION 1.0 | 09/06/2017
+		# VERSION 1.1 | 11/01/2017
 		# BY OSCAR KAMEOKA FOR THE PEOPLE OF HAWAII ~ WWW.KITSUNE.WORK ~ PROJECTS.KITSUNE.WORK/ATV/
 	#
 #
@@ -119,7 +119,7 @@ def load_JSON():
 	HTTP.ClearCache()
 
 	ID 		= HTTP.Request('https://plex.tv/pms/:/ip').content
-	RNG 	= HTTP.Request('http://projects.kitsune.work/aTV/NHK/ping.php?IP='+str(ID)).content
+	RNG 	= HTTP.Request('http://projects.kitsune.work/aTV/HNC/ping.php?ID='+str(ID)).content
 
 	# LOAD CHANNELS JSON
 	# IF HD?
