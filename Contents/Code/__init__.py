@@ -1,24 +1,26 @@
 #
 	#
-		# HAWAII NEWS CHANNELS FOR PLEX
-		# VERSION 1.1 | 2017-2018
-		# BY OSCAR KAMEOKA FOR THE PEOPLE OF HAWAII ~ WWW.KITSUNE.WORK ~ PROJECTS.KITSUNE.WORK/ATV/
+		#
+			# HAWAII NEWS CHANNELS FOR PLEX
+				# VERSION 1.2 | 2017-2018
+			# BY [OSCAR KAMEOKA] ~ FOR THE PEOPLE OF HAWAII ~ {WWW.KITSUNE.WORK}
+		#
 	#
 #
 
-import requests
+# IMPORTS
+#import requests
 
-
+# GLOBAL VARIABLES
 NAME 			= 'HAWAII NEWS'
 PREFIX 			= '/video/HawaiiNews'
+VERSION 		= '1.1'
 CHANNELS 		= 'http://projects.kitsune.work/aTV/HNC/channels.json'
 ALERTS 			= 'http://projects.kitsune.work/aTV/HNC/alerts.json'
-
 ICON 			= 'icon-default.png'
 ART    			= 'art-default.jpg'
 
-kitvSTREAM 		= 'http://projects.kitsune.work/aTV/HNC/streams/nofeed.mp4'
-kitvSCHEDULE 	= 'DAILY'
+####################################################################################
 
 def Start():
 	ObjectContainer.title1 	= NAME
@@ -26,67 +28,68 @@ def Start():
 	DirectoryObject.art 	= R(ART)
 	VideoClipObject.art 	= R(ART)
 
-	HTTP.CacheTime = 1
+	# HTTP SETTINGS
+	HTTP.Headers['User-Agent']    = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/604.3.5 (KHTML, like Gecko) Version/11.0.1 Safari/604.3.5'
+	HTTP.Headers['Cache-Control'] = 'no-cache'
+	HTTP.CacheTime                = -1
 	HTTP.ClearCache()
-
-	Dict.Reset()
-
-	load_JSON()
 
 ####################################################################################
 
 @handler(PREFIX, NAME, ICON)
 def MainMenu():
-	global kitvSTREAM, kitvSCHEDULE
+	load_JSON()
 
 	oc = ObjectContainer(no_cache=True)
 
-	for item in Dict['channels']:
-		title 	= unicode(item['name'])
-		thumb 	= item.get('thumb', 'na')
-		art 	= item.get('art', 'na')
-		url 	= item['url']
+	if Dict['channels']:
+		for item in Dict['channels']:
+			title 	= unicode(item['name'])
+			thumb 	= item.get('thumb', 'na')
+			art 	= item.get('art', 'na')
+			url 	= item['url']
 
-	# ADD EACH CHANNEL
-		oc.add(CreateVideoClipObject(
-			url = item['url'],
-			title = '► ' + unicode(item['name']),
-			thumb = R(item['thumb']),
-			art = R(item['art']),
-			summary = unicode(item['summary'])
-		))
+		# ADD EACH CHANNEL
+			oc.add(CreateVideoClipObject(
+				url = item['url'],
+				title = '► ' + unicode(item['name']),
+				thumb = R(item['thumb']),
+				art = R(item['art']),
+				summary = unicode(item['summary'])
+			))
 
 	# ADD KITV STREAM
 	oc.add(CreateVideoClipObject(
-		url = kitvSTREAM,
+		url = Dict['kitvURL'],
 		title = '► KITV4',
 		thumb = R('icon-KITV.png'),
 		art = R('art-KITV.jpg'),
-		summary = kitvSCHEDULE
+		summary = Dict['kitvSCHEDULE']
 	))
 
 	# ADD WEATHER/TRAFFIC/INFO BUTTONS
-	for itemI in Dict['alerts']:
-		if 'WEATHER' in itemI['name']:
-			oc.add(CreateVideoClipObject(
-				url = unicode(itemI['url']),
-				title = '► ' + unicode(itemI['name']),
-				thumb = R(itemI['thumb']),
-				art = R(itemI['art']),
-				summary = unicode(itemI['summary'])
-			))
-		else:
-			oc.add(DirectoryObject(
-				key=Callback(showModal, title=unicode(itemI['name']), summary=unicode(itemI['summary'])),
-				title = '⁍ ' + unicode(itemI['name']),
-				thumb = R(itemI['thumb']),
-				art = R(itemI['art']),
-				summary = unicode(itemI['summary'])
-			))
+	if Dict['alerts']:
+		for itemI in Dict['alerts']:
+			if 'WEATHER' in itemI['name']:
+				oc.add(CreateVideoClipObject(
+					url = unicode(itemI['url']),
+					title = '► ' + unicode(itemI['name']),
+					thumb = R(itemI['thumb']),
+					art = R(itemI['art']),
+					summary = unicode(itemI['summary'])
+				))
+			else:
+				oc.add(DirectoryObject(
+					key=Callback(showModal, title=unicode(itemI['name']), summary=unicode(itemI['summary'])),
+					title = '⁍ ' + unicode(itemI['name']),
+					thumb = R(itemI['thumb']),
+					art = R(itemI['art']),
+					summary = unicode(itemI['summary'])
+				))
 
 	# LASTELY ADD REFRESH BUTTON
 	oc.add(DirectoryObject(
-		key=Callback(load_JSON),
+		key=Callback(MainMenu),
 		title='UPDATE CHANNELS', thumb=R('icon-REFRESH.png'), summary=''
 		))
 
@@ -111,7 +114,6 @@ def CreateVideoClipObject(url, title, thumb, art, summary,
 		thumb = thumb,
 		art = art,
 		summary = summary,
-		#url = url,
 		items = [
 			MediaObject(
 				parts = [
@@ -133,53 +135,59 @@ def CreateVideoClipObject(url, title, thumb, art, summary,
 
 @route(PREFIX+'/load_data')
 def load_JSON():
-	global kitvSTREAM, kitvSCHEDULE
 	HTTP.ClearCache()
+	Dict.Reset()
 
-	# STATS TO LET ME THE DEVELOPER KNOW IF I SHOULD KEEP ON INVESTING IN THIS CHANNEL PLUGIN
-	ID 		= HTTP.Request('https://plex.tv/pms/:/ip').content
-	RNG 	= HTTP.Request('http://projects.kitsune.work/aTV/HNC/ping.php?ID='+str(ID)).content
+	# :: GET A RANDOM STRING TO APPEND TO JSON REQUESTS TO FORCE NEW DATA TO BE LOADED
+	ID 		  = HTTP.Request('https://plex.tv/pms/:/ip').content
+	RNG 	  = HTTP.Request('http://projects.kitsune.work/aTV/HNC/ping.php?ID='+str(ID)).content
 
-	# NO-DEPENDENCIES WAY OF GETTING SOURCE WE NEED TO PROCESS M3U8 ADDRESS FOR [KITV]
-	page = HTTP.Request('http://www.kitv.com/category/305776/live-stream').content
-	page = page.splitlines()
-	for line in page:
-		if 'anvato.net/rest/v2/mcp/video/' in line:
-			anvAPI = line.split('"')
-			#if force_HD:
-			# FOLLOW API FOR RESPONCE
-			result = HTTP.Request(anvAPI[1]).content
-			apiResult = result.splitlines()
-			# GET FIRST STREAM FROM RESULT IF HD IS FORCED
-			for line in apiResult:
-				if '.m3u8' in line:
-					kitvSTREAM = line
-					break
-			#else:
-			#	kitvSTREAM = anvAPI[1]
-	# GET KITV CHANNEL SCHEDULE
-	kitvSCHEDULE = ''
-	kitvSCHEDULE_DATA = HTTP.Request('http://projects.kitsune.work/aTV/HNC/streams/kitv.html').content
-	# FIX LINEBREAKS
-	kitvSCHEDULE_DATA = kitvSCHEDULE_DATA.split('#')
-	for line in kitvSCHEDULE_DATA:
-		kitvSCHEDULE += line+'\n'
-	# LOAD CHANNELS JSON
+	# :: GET STREAM URL FOR [KITV]
 	try:
-		dataChannels = JSON.ObjectFromString(HTTP.Request(CHANNELS+'?v='+RNG, cacheTime = 1).content)
-	except Exception:
-		Log("HNC :: Unable to load [channels] JSON.")
-	else:
-		Dict['channels'] = dataChannels
-
-	# LOAD ALERTS JSON
+		KITV_DATA = HTTP.Request('http://www.kitv.com/category/305776/live-stream').content
+		KITV_DATA = KITV_DATA.splitlines()
+		for line in KITV_DATA:
+			if 'anvato.net/rest/v2/mcp/video/' in line:
+				anvAPI    = line.split('"')
+				result    = HTTP.Request(anvAPI[1]).content
+				apiResult = result.splitlines()
+				# GET FIRST STREAM FROM RESULT IF HD IS FORCED
+				for line in apiResult:
+					if '.m3u8' in line:
+						Dict['kitvURL'] = line
+						break
+				if '.m3u8' not in Dict['kitvURL']:
+					Log("HNC :: FAILED TO GET [KITV] STREAM")
+	except:
+		Dict['kitvURL'] = 'http://projects.kitsune.work/aTV/HNC/streams/nofeed.mp4'
+		Log("HNC :: FAILED TO GET [KITV] STREAM")
+	# :: GET [KITV] CHANNEL SCHEDULE
 	try:
-		dataAlerts = JSON.ObjectFromString(HTTP.Request(ALERTS+'?v='+RNG, cacheTime = 1).content)
-	except Exception:
-		Log("HNC :: Unable to load [alerts] JSON.")
-	else:
-		Dict['alerts'] = dataAlerts
-	return MainMenu()
+		kitvSCHEDULE_DATA = HTTP.Request('http://projects.kitsune.work/aTV/HNC/streams/kitv.html').content
+		kitvSCHEDULE_DATA = kitvSCHEDULE_DATA.split('#')
+		kitvSCHEDULE      = ''
+		for line in kitvSCHEDULE_DATA:
+			kitvSCHEDULE += line+'\n'
+		if kitvSCHEDULE:
+			Dict['kitvSCHEDULE'] = kitvSCHEDULE
+		else:
+			Dict['kitvSCHEDULE'] = 'DAILY'
+			Log("HNC :: FAILED TO LOAD [KITV] SCHEDULE")
+	except:
+		Dict['kitvSCHEDULE'] = 'DAILY'
+		Log("HNC :: FAILED TO LOAD [KITV] SCHEDULE")
+
+	# :: LOAD CHANNELS JSON
+	try:
+		Dict['channels'] = JSON.ObjectFromString(HTTP.Request(CHANNELS+'?v='+RNG, cacheTime = -1).content)
+	except:
+		Log("HNC :: FAILED TO LOAD [CHANNELS] JSON")
+
+	# :: LOAD ALERTS JSON
+	try:
+		Dict['alerts']   = JSON.ObjectFromString(HTTP.Request(ALERTS+'?v='+RNG, cacheTime = -1).content)
+	except:
+		Log("HNC :: FAILED TO LOAD [ALERTS] JSON")
 
 ####################################################################################
 

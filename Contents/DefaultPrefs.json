@@ -1,11 +1,11 @@
 [
-	{
-		"id": "user_local",
-		"type": "enum",
-		"label": "Set Weather And Alerts Location",
-		"values": ["Aiea", "Honolulu", "Big Island"],
-		"default": "Honolulu"
-	},
+	// {
+	// 	"id": "user_local",
+	// 	"type": "enum",
+	// 	"label": "Set Weather And Alerts Location",
+	// 	"values": ["Aiea", "Honolulu", "Big Island"],
+	// 	"default": "Honolulu"
+	// },
 	{
 		"id": "force_HD",
 		"type": "bool",
